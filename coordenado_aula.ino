@@ -1,21 +1,27 @@
+// Minha placa
 #include <SPI.h>
 #include "printf.h"
 #include "RF24.h"
+#include "Servo.h"
 
-#define CE_PIN 7
-#define CSN_PIN 8
+#define CE_PIN 8
+#define CSN_PIN 10
+#define SERVO_PIN 3
 
 #define MSG 0
 #define ACK 1
 #define RTS 2
 #define CTS 3
 
+Servo s;
+int pos=0;
+
 RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
 
 byte payload[5] = {0,1,2,3,4};
 byte payloadRx[5] = "    ";
-uint8_t origem=43;
+uint8_t origem=99;
 uint8_t indice=0;
 
 
@@ -32,7 +38,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(100);
+  radio.setChannel(110);
   radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
@@ -42,10 +48,13 @@ void setup() {
   radio.openReadingPipe(1, address[1]);  // using pipe 1
 
   //For debugging info
-  printf_begin();             // needed only once for printing details
+  //printf_begin();             // needed only once for printing details
   //radio.printDetails();       // (smaller) function that prints raw register values
-  radio.printPrettyDetails(); // (larger) function that prints human readable data
+  //radio.printPrettyDetails(); // (larger) function that prints human readable data
 
+
+  s.attach(SERVO_PIN);
+  s.write(0);
 }
 
 void printPacote(byte *pac, int tamanho){
@@ -69,7 +78,7 @@ void printPacote(byte *pac, int tamanho){
 bool aguardaMsg(int tipo){
     radio.startListening();
     unsigned long tempoInicio = millis();
-    while(millis()-tempoInicio<500){
+    while(millis()-tempoInicio<1000){
       if (radio.available()) {              // is there a payload? get the pipe number that recieved it
         uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
         radio.read(&payloadRx[0], bytes);             // fetch payload from FIFO
@@ -92,22 +101,22 @@ bool sendPacket(byte *pacote, int tamanho, int destino, int controle){
     pacote[1]=destino;
     pacote[2]=controle;
     pacote[3]=indice;
-    for(int i=0;i<tamanho;i++){
-      Serial.print(pacote[i]);
-    }
-    Serial.println();
+    //for(int i=0;i<tamanho;i++){
+    //  Serial.print(pacote[i]);
+    //}
+    //Serial.println();
    
     while(1){
         
        radio.startListening();
-       delayMicroseconds(70);
+       delayMicroseconds(50);
        radio.stopListening();
        if (!radio.testCarrier()) {
           return radio.write(&pacote[0], tamanho);
           
        }else{
-        Serial.println("Meio Ocupado");
-        delayMicroseconds(270);
+        //Serial.println("Meio Ocupado");
+        delayMicroseconds(100);
        }
        radio.flush_rx();
     }
@@ -121,18 +130,18 @@ void loop() {
       uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
       radio.read(&payloadRx[0], bytes);             // fetch payload from FIFO
       if(payloadRx[1]==origem && payloadRx[2]==RTS){
-        Serial.println("pacote pra mim");
+        //Serial.println("pacote pra mim");
         //printPacote(&payloadRx[0], bytes);
         bool report = sendPacket(&payloadRx[0], sizeof(payloadRx), payloadRx[0], CTS);
         radio.startListening();
         report = aguardaMsg(MSG);
         if (report){
           bool report = sendPacket(&payloadRx[0], sizeof(payloadRx), payloadRx[0], ACK);
-          printPacote(&payloadRx[0], bytes);
+          //printPacote(&payloadRx[0], bytes);
         }
+  
       }
-      printPacote(&payloadRx[0], bytes);
-      
+      //printPacote(&payloadRx[0], bytes);
     }
     radio.flush_rx();
     delay(10);

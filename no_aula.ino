@@ -1,3 +1,4 @@
+//PLACA PROFESSOR
 #include <SPI.h>
 #include "printf.h"
 #include "RF24.h"
@@ -10,14 +11,14 @@
 #define RTS 2
 #define CTS 3
 
-#define TIMEOUT 500 //milisegundos
+#define TIMEOUT 1000 //milisegundos
 
 RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
 
 byte payload[5] = {0,1,2,3,4};
 byte payloadRx[5] = "    ";
-uint8_t origem=43;
+uint8_t origem=98;
 uint8_t indice=0;
 
 
@@ -34,7 +35,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(100);
+  radio.setChannel(110);
   radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
@@ -44,9 +45,9 @@ void setup() {
   radio.openReadingPipe(1, address[1]);  // using pipe 1
 
   //For debugging info
-  printf_begin();             // needed only once for printing details
+  //printf_begin();             // needed only once for printing details
   //radio.printDetails();       // (smaller) function that prints raw register values
-  radio.printPrettyDetails(); // (larger) function that prints human readable data
+  //radio.printPrettyDetails(); // (larger) function that prints human readable data
 
 }
 
@@ -78,6 +79,7 @@ bool aguardaMsg(int tipo){
         if(payloadRx[1]==origem && payloadRx[2]==tipo){
           
           radio.stopListening();
+
           return true;
         }
       }
@@ -94,10 +96,10 @@ bool sendPacket(byte *pacote, int tamanho, int destino, int controle){
     pacote[1]=destino;
     pacote[2]=controle;
     pacote[3]=indice;
-    for(int i=0;i<tamanho;i++){
-      Serial.print(pacote[i]);
-    }
-    Serial.println();
+    //for(int i=0;i<tamanho;i++){
+    //  Serial.print(pacote[i]);
+    //}
+    //Serial.println();
    
     while(1){
         
@@ -125,10 +127,10 @@ void loop() {
     if (c == 'T') {
       // Become the TX node
       unsigned long start_timer = micros();                // start the timer
-      bool report = sendPacket(&payload[0], sizeof(payload), 43, RTS);  // transmit & save the report
+      bool report = sendPacket(&payload[0], sizeof(payload), 99, RTS);  // transmit & save the report
       report = aguardaMsg(CTS);
       if(report){
-        sendPacket(&payload[0], sizeof(payload), 43, MSG);
+        sendPacket(&payload[0], sizeof(payload), 99, MSG);
         report = aguardaMsg(ACK);
       }
       
