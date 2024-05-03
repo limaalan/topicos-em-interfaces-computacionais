@@ -23,11 +23,24 @@ RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
 
 //Definindo variáveis e structs que serão utilizadas na transmissão
-byte payload[5] = {0,1,2,3,4};
-byte payloadRx[5] = "    ";
-uint8_t origem=98;
+//byte payload[5] = {0,1,2,3,4};
+//byte payloadRx[5] = "    ";
+uint8_t meu_end=98;
 uint8_t end_coordenador = 99 ; // Endereço do coordenador ( destino dos pacotes)
-uint8_t indice=0;
+
+struct Payload {
+  byte id_rede = 99 ; 
+  byte destino = end_coordenador ;
+  byte origem = meu_end;
+  byte tipo;
+  //byte indice;
+  int temperatura;
+  int humidade;
+};
+Payload payload_recebimento ;
+Payload payload_transmissao ;
+
+
 
 
 void setup() {
@@ -44,10 +57,10 @@ void setup() {
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
   radio.setChannel(110);
-  radio.setPayloadSize(sizeof(payload));  // float datatype occupies 4 bytes
+  radio.setPayloadSize(12);//sizeof(payload_transmissao));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
-  radio.setDataRate(RF24_2MBPS);
+  radio.setDataRate(RF24_1MBPS);
 
   radio.openWritingPipe(address[0]);  // always uses pipe 0
   radio.openReadingPipe(1, address[1]);  // using pipe 1
@@ -60,22 +73,20 @@ void setup() {
 
 }
 
-void printPacote(byte *pac, int tamanho){
-      Serial.print(F("Rcvd "));
-      Serial.print(tamanho);  // print the size of the payload
-      Serial.print(F(" O: "));
-      Serial.print(pac[0]);  // print the payload's value
-      Serial.print(F(" D: "));
-      Serial.print(pac[1]);  // print the payload's value
-      Serial.print(F(" C: "));
-      Serial.print(pac[2]);  // print the payload's value
-      Serial.print(F(" i: "));
-      Serial.print(pac[3]);  // print the payload's value
-      Serial.print(F(" : "));
-      for(int i=4;i<tamanho;i++){
-        Serial.print(pac[i]);
-      }
-      Serial.println();  // print the payload's value
+void printPacote(Payload *payload){
+      Serial.print(F("Rede: "));
+      Serial.print(payload->id_rede);
+      Serial.print(F(" Destino: "));
+      Serial.print(payload->destino);
+      Serial.print(F(" Origem : "));
+      Serial.print(payload->origem);
+      Serial.print(F(" Tipo : "));
+      Serial.print(payload->tipo);
+      Serial.print(F(" Temperatura : "));
+      Serial.print(payload->temperatura);
+      Serial.print(F(" Humidade : "));
+      Serial.print(payload->humidade);
+      Serial.println(); 
 }
 //Aguarda por TIMEOUT milisegundos uma mesangem do tipo TIPO
 bool aguardaMsg(int tipo){
@@ -83,9 +94,9 @@ bool aguardaMsg(int tipo){
     unsigned long tempoInicio = millis();
     while(millis()-tempoInicio<TIMEOUT){
       if (radio.available()) {
-        uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
-        radio.read(&payloadRx[0], bytes);             // fetch payload from FIFO
-        if(payloadRx[1]==origem && payloadRx[2]==tipo){
+        uint8_t bytes = radio.getPayloadSize(); 
+        radio.read(&payload_recebimento, bytes);             
+        if(payload_recebimento.destino==meu_end && payload_recebimento.tipo==tipo){
           radio.stopListening();
           return true;
         }
@@ -97,16 +108,10 @@ bool aguardaMsg(int tipo){
     return false;
 }
  
-bool sendPacket(byte *pacote, int tamanho, int destino, int controle){
-    pacote[0]=origem;
-    pacote[1]=destino;
-    pacote[2]=controle;
-    pacote[3]=indice;
-    //for(int i=0;i<tamanho;i++){
-    //  Serial.print(pacote[i]);
-    //}
-    //Serial.println();
-   
+bool sendPacket(Payload *payload_transmissao, int tamanho, int destino, int controle){
+    payload_transmissao->tipo = controle;
+    payload_transmissao->destino = destino;
+    printPacote(payload_transmissao);
     while(1){
        //Faz o Carrier Sense 
        radio.startListening();
@@ -114,7 +119,7 @@ bool sendPacket(byte *pacote, int tamanho, int destino, int controle){
        radio.stopListening();
        //Caso o meio estiver livre, envia
        if (!radio.testCarrier()) { 
-          return radio.write(&pacote[0], tamanho);
+          return radio.write(&payload_transmissao, tamanho);
           
        }else{ //Caso contrario, espera
         Serial.println("Meio Ocupado");
@@ -126,30 +131,36 @@ bool sendPacket(byte *pacote, int tamanho, int destino, int controle){
 
 
 void loop() {
+  
   int temperatura = 0 ;
   int humidade = 0 ;
   int result = dht11.readTemperatureHumidity ( temperatura, humidade ) ;
   if (result == 0 ){
-    Serial.print("Temperature: ");
+    Serial.print("Temperatura: ");
     Serial.print(temperatura);
-    Serial.print(" °C\tHumidity: ");
+    Serial.print(" °C\tHumidade: ");
     Serial.print(humidade);
     Serial.println(" %");
   } else {
     Serial.println(DHT11::getErrorString(result));
+    temperatura = -253 ; // Erro na leitura 
+    humidade = - 1;
   }
-  delay (1000);
-  return 0 ;
 
-  if (Serial.available()) {
-    char c = toupper(Serial.read());
-    if (c == 'T') {
-      //unsigned long start_timer = micros();                // Começa o Timer
-      bool report = sendPacket(&payload[0], sizeof(payload), end_coordenador, RTS);  // Transmite um pacote RTS e salva o resultado em report
+  //if (Serial.available()) {
+    //char c = toupper(Serial.read());
+    //if (c == 'T') {
+      payload_transmissao.temperatura = temperatura;
+      payload_transmissao.humidade = humidade;
+      byte bytes = radio.getPayloadSize();
+      Serial.println(bytes);
+
+      bool report = sendPacket(&payload_transmissao, sizeof(Payload), end_coordenador, RTS);  // Transmite um pacote RTS e salva o resultado em report
       report = aguardaMsg(CTS); // Aguarda pelo CTS
       if(report){
         //Recebeu o CTS, agora envia o dado
-        sendPacket(&payload[0], sizeof(payload), end_coordenador, MSG); 
+        
+        sendPacket(&payload_transmissao, sizeof(Payload), end_coordenador, MSG); 
         report = aguardaMsg(ACK); // Aguarda ACK do dado enviado
       }
       
@@ -160,11 +171,11 @@ void loop() {
          Serial.println("FALHA!");
       }
 
-    }
-  }
+    //}
+  //}
 
     radio.flush_rx();
-    delay(10);
+    delay(1000);
 
 
 }
