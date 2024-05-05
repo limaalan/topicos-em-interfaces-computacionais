@@ -29,10 +29,10 @@ uint8_t meu_end=98;
 uint8_t end_coordenador = 99 ; // Endereço do coordenador ( destino dos pacotes)
 
 struct Payload {
-  byte id_rede = 99 ; 
-  byte destino = end_coordenador ;
-  byte origem = meu_end;
-  byte tipo;
+  uint8_t id_rede = 99 ; 
+  uint8_t destino = end_coordenador ;
+  uint8_t origem = meu_end;
+  uint8_t tipo;
   //byte indice;
   int temperatura;
   int humidade;
@@ -57,10 +57,11 @@ void setup() {
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
   radio.setChannel(110);
-  radio.setPayloadSize(12);//sizeof(payload_transmissao));  // float datatype occupies 4 bytes
+  radio.setPayloadSize(8);//sizeof(payload_transmissao));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
-  radio.setDataRate(RF24_1MBPS);
+  radio.setDataRate(RF24_2MBPS);
+  //radio.disableDynamicPayloads();
 
   radio.openWritingPipe(address[0]);  // always uses pipe 0
   radio.openReadingPipe(1, address[1]);  // using pipe 1
@@ -89,7 +90,7 @@ void printPacote(Payload *payload){
       Serial.println(); 
 }
 //Aguarda por TIMEOUT milisegundos uma mesangem do tipo TIPO
-bool aguardaMsg(int tipo){
+bool aguardaMsg(uint8_t tipo){
     radio.startListening();
     unsigned long tempoInicio = millis();
     while(millis()-tempoInicio<TIMEOUT){
@@ -108,7 +109,7 @@ bool aguardaMsg(int tipo){
     return false;
 }
  
-bool sendPacket(Payload *payload_transmissao, int tamanho, int destino, int controle){
+bool sendPacket(Payload *payload_transmissao, int tamanho, uint8_t destino, uint8_t controle){
     payload_transmissao->tipo = controle;
     payload_transmissao->destino = destino;
     printPacote(payload_transmissao);
@@ -119,7 +120,11 @@ bool sendPacket(Payload *payload_transmissao, int tamanho, int destino, int cont
        radio.stopListening();
        //Caso o meio estiver livre, envia
        if (!radio.testCarrier()) { 
-          return radio.write(&payload_transmissao, tamanho);
+          uint8_t * byteArray  ;
+          byteArray = (uint8_t *) &payload_transmissao ;  // treat struct as byte arraay
+
+          return radio.write( &byteArray[ 0 ] , tamanho );
+          //return radio.write(&payload_transmissao, tamanho);
           
        }else{ //Caso contrario, espera
         Serial.println("Meio Ocupado");
@@ -155,12 +160,12 @@ void loop() {
       byte bytes = radio.getPayloadSize();
       Serial.println(bytes);
 
-      bool report = sendPacket(&payload_transmissao, sizeof(Payload), end_coordenador, RTS);  // Transmite um pacote RTS e salva o resultado em report
+      bool report = sendPacket(&payload_transmissao, 8, end_coordenador, RTS);  // Transmite um pacote RTS e salva o resultado em report
       report = aguardaMsg(CTS); // Aguarda pelo CTS
       if(report){
         //Recebeu o CTS, agora envia o dado
         
-        sendPacket(&payload_transmissao, sizeof(Payload), end_coordenador, MSG); 
+        sendPacket(&payload_transmissao, 8, end_coordenador, MSG); 
         report = aguardaMsg(ACK); // Aguarda ACK do dado enviado
       }
       

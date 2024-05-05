@@ -1,0 +1,36 @@
+struct Coord {
+  float ax ;
+  float ay ;
+  float az ;
+  // ...
+  // pad out to 96 bytes ( 3 * 32)
+};
+
+Coord coord ;
+
+
+void setup() {
+  Serial.begin( 115200 ) ;
+  //
+}
+
+void loop() {
+
+  // load struct to send
+  coord.ax = 1.5 ;
+  coord.ay = 3.9 ;
+  coord.az = 7.2 ;
+  //etc.
+
+  uint8_t * byteArray  ;
+  byteArray = (uint8_t *) &coord ;  // treat struct as byte arraay
+
+  radio.write( &byteArray[ 0 ] , 32 );
+  delay( 100) ;
+
+  radio.write( &byteArray[ 32 ] , 32 );
+  delay( 100) ;
+
+  radio.write( &byteArray[ 64 ] , 32 );
+  delay( 500) ;
+}

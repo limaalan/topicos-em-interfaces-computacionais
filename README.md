@@ -10,3 +10,8 @@ O resultado será uma aplicação IoT, onde os dados coletados dos nós serão a
 2. O cana é alterado para um com outras equipes trocando msgs.
 3. É adicionado ruido ao canal utilizado.
 4. É utilizado um canal comum à uma rede wifi.
+
+## Links Úteis : 
+ - [Trabalhando com NRF24 + ethernet shield](https://forum.arduino.cc/t/nrf24l01-radios-rf24-library-ethernet-shield-do-not-work-together/195013/24)
+ - [Tutoriais NRF24L01](https://forum.arduino.cc/t/simple-nrf24l01-2-4ghz-transceiver-demo/405123/64)
+ - [Documentação da biblioteca NRF24](https://nrf24.github.io/RF24/)

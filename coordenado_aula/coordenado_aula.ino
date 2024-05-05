@@ -21,10 +21,10 @@ byte payloadRx[5] = "    ";
 uint8_t origem=99;
 
 struct Payload {
-  byte id_rede = 99 ; 
-  byte destino ;
-  byte origem = origem;
-  byte tipo;
+  uint8_t id_rede = 99 ; 
+  uint8_t destino ;
+  uint8_t origem = origem;
+  uint8_t tipo;
   //byte indice;
   int temperatura;
   int humidade;
@@ -47,10 +47,12 @@ void setup() {
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
   radio.setChannel(110);
-  radio.setPayloadSize(12);//sizeof(payload_recebimento));  // float datatype occupies 4 bytes
+  radio.setPayloadSize(8);//sizeof(payload_recebimento));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);
-  radio.setDataRate(RF24_1MBPS);
+  radio.setDataRate(RF24_2MBPS);
+  //radio.disableDynamicPayloads();
+
 
   radio.openWritingPipe(address[0]);  // always uses pipe 0
   radio.openReadingPipe(1, address[1]);  // using pipe 1
@@ -80,7 +82,7 @@ void printPacote(Payload *payload){
 
 
 //Aguarda por TIMEOUT milisegundos uma mesangem do tipo TIPO
-bool aguardaMsg(int tipo){
+bool aguardaMsg(uint8_t tipo){
     radio.startListening();
     unsigned long tempoInicio = millis();
     while(millis()-tempoInicio<TIMEOUT){
@@ -100,7 +102,7 @@ bool aguardaMsg(int tipo){
 }
   
 
-bool sendPacket(Payload *payload_transmissao, int tamanho, int destino, int controle){
+bool sendPacket(Payload *payload_transmissao, uint8_t tamanho, uint8_t destino, uint8_t controle){
     payload_transmissao->tipo = controle;
     payload_transmissao->destino = destino;
    
@@ -126,7 +128,11 @@ void loop() {
     radio.startListening();
     if (radio.available()) {              // Recebeu algo
       uint8_t bytes = radio.getPayloadSize();  // Obtém o tamanho do payload
-      radio.read(&payload_recebimento, bytes);
+      uint8_t * byteArray  ;
+      byteArray = (uint8_t *) &payload_recebimento ;  // treat struct as byte arraay
+
+      radio.read(&byteArray[ 0 ] , bytes );
+      //radio.read(&payload_recebimento, bytes);
       printPacote(&payload_recebimento);
       Serial.println(bytes);
       //Serial.println(payload_recebimento.id_rede);
@@ -134,21 +140,21 @@ void loop() {
       //Serial.println(payload_recebimento.destino);
       //Serial.println(payload_recebimento.temperatura);
       //Serial.println(payload_recebimento.humidade);       
-      if(payload_recebimento.destino == origem && payload_recebimento.tipo==RTS){ // Pacote para mim do tipo RTS
-        Serial.println("pacote pra mim : ");
-        printPacote(&payload_recebimento);
-        bool report = sendPacket(&payload_transmissao, sizeof(Payload), payload_recebimento.origem, CTS); // Responde um CTS com destino à origem do pacote recebido.
+      //if(payload_recebimento.destino == origem && payload_recebimento.tipo==RTS){ // Pacote para mim do tipo RTS
+      //  Serial.println("pacote pra mim : ");
+      //  printPacote(&payload_recebimento);
+      //  bool report = sendPacket(&payload_transmissao, 12, payload_recebimento.origem, CTS); // Responde um CTS com destino à origem do pacote recebido.
         //radio.startListening(); // Já tem no aguardaMsg
-        report = aguardaMsg(MSG); // Aguarda dados
-        if (report){
-          bool report = sendPacket(&payload_transmissao, sizeof(Payload), payload_recebimento.origem, ACK); // Responde ACK para os dados
-          Serial.print(F("ENVIADO: "));
-          printPacote(&payload_transmissao);
-        }
+      //  report = aguardaMsg(MSG); // Aguarda dados
+      //  if (report){
+      //    bool report = sendPacket(&payload_transmissao, 12, payload_recebimento.origem, ACK); // Responde ACK para os dados
+      //    Serial.print(F("ENVIADO: "));
+      //    printPacote(&payload_transmissao);
+      //  }
   
-      }
-      //printPacote(&payloadRx[0], bytes);
+      //}
     }
+    //radio.stopListening();
     radio.flush_rx();
     delay(10);
 
