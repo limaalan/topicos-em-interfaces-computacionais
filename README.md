@@ -11,6 +11,24 @@ O resultado será uma aplicação IoT, onde os dados coletados dos nós serão a
 3. É adicionado ruido ao canal utilizado.
 4. É utilizado um canal comum à uma rede wifi.
 
+## Estrutura do projeto :
+```
+├── README.md 
+├── src
+│   ├── coordenador
+│   │   └── coordenador.ino
+│   └── no
+│       └── no.ino
+└── util
+    ├── ALOHA
+    ├── aloha2
+    ├── CSMA com confirmação
+    ├── struct
+    └── versao_lista
+```
+* coordenador.ino : Código para a placa que cumprirá o papel de coordenador
+* no.ino : Código para as placas que cumprirão o papel de nós da rede de sensores. 
+* /util : Snippets de código úteis durante o desenvolvimento.
 ## Links Úteis : 
  - [Trabalhando com NRF24 + ethernet shield](https://forum.arduino.cc/t/nrf24l01-radios-rf24-library-ethernet-shield-do-not-work-together/195013/24)
  - [Tutoriais NRF24L01](https://forum.arduino.cc/t/simple-nrf24l01-2-4ghz-transceiver-demo/405123/64)
