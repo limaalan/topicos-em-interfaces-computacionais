@@ -34,3 +34,4 @@ O resultado será uma aplicação IoT, onde os dados coletados dos nós serão a
  - [Tutoriais NRF24L01](https://forum.arduino.cc/t/simple-nrf24l01-2-4ghz-transceiver-demo/405123/64)
  - [Documentação da biblioteca NRF24](https://nrf24.github.io/RF24/)
  - [Módulo de rádio para quando se usa um servo motor](https://forum.arduino.cc/t/when-i-attach-the-servo-nrf24-confused-it-no-longer-runs-the-motors/1059329/7)
+ - [Informações sobre o ENCJ28](https://www.tweaking4all.com/hardware/arduino/arduino-enc28j60-ethernet/)
