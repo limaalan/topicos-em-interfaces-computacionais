@@ -48,7 +48,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(110);
+  radio.setChannel(50);
   radio.setPayloadSize(sizeof(payload));//sizeof(payload_recebimento));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   //radio.disableDynamicPayloads();
@@ -131,16 +131,18 @@ void loop() {
     if (radio.available()) {// Recebeu algo
       uint8_t bytes = radio.getPayloadSize();// Obtém o tamanho do payload
       radio.read(&payloadRx, bytes );
-      printPacote(&payloadRx);
+      //printPacote(&payloadRx);
       //Serial.println(payloadRx.humidade);
 
       if(payloadRx.destino == meu_end && payloadRx.tipo==RTS && payloadRx.id_rede == ID_REDE){ // Pacote para mim do tipo RTS
-        Serial.println("pacote pra mim : ");
+        //Serial.println("pacote pra mim : ");
         sendPacket(&payload, bytes, payloadRx.origem, CTS); // Responde um CTS com destino à origem do pacote recebido.
         bool report = aguardaMsg(MSG); // Aguarda dados
         if (report){
+          Serial.println(String(payloadRx.origem) + " " + String(payloadRx.temperatura) + " " + String(payloadRx.humidade));
+
           sendPacket(&payload, bytes, payloadRx.origem, ACK); // Responde ACK para os dados
-          Serial.println(F("ACK enviado: "));
+          //Serial.println(F("ACK enviado: "));
           //printPacote(&payload);
         }
       }

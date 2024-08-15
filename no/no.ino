@@ -60,7 +60,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(110);
+  radio.setChannel(50);
   radio.setPayloadSize(sizeof(payload));//sizeof(payload_transmissao));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   radio.setCRCLength(RF24_CRC_DISABLED);

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoramente de temperatura</title>
+  <style>
+  </style>
+</head>
+<body>
+  <h1>Leitura atual</h1>
+    <h2 id="id"> Id Placa:</h2>
+    <h2 id="temp">Temperatura:</h2>
+    <h2 id="hum"> Humidade:</h2>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    socket.on('atualizar-dados', ({ id, temp, humidade }) => {
+   
+      document.getElementById('id').innerText = `Id Placa: ${id}`;
+      document.getElementById('temp').innerText = `Temperatura: ${temp}`;
+      document.getElementById('hum').innerText = `Humidade: ${humidade}`;
+    });
+  </script>
+</body>
+</html>
