@@ -13,25 +13,40 @@ O resultado será uma aplicação IoT, onde os dados coletados dos nós serão a
 
 ## Estrutura do projeto :
 ```
-├── README.md 
-├── src
-│   ├── coordenador
-│   │   └── coordenador.ino
-│   └── no
-│       └── no.ino
-└── util
-    ├── ALOHA
-    ├── aloha2
-    ├── CSMA com confirmação
-    ├── struct
-    └── versao_lista
+├─  topicos-em-interfaces-computacionais
+│   README.md
+└───src
+    ├───Arduino
+    │   ├───coordenador
+    │   │       coordenador.ino
+    │   │       
+    │   ├───no
+    │   │       no.ino
+    │   │       
+    │   └───no_dados_aleatorios
+    │           no_dados_aleatorios.ino
+    │           
+    └───Servidor
+        │   index.js
+        │   package-lock.json
+        │   package.json
+        │   
+        └───public
+                index.html
 ```
-* coordenador.ino : Código para a placa que cumprirá o papel de coordenador
-* no.ino : Código para as placas que cumprirão o papel de nós da rede de sensores. 
-* /util : Snippets de código úteis durante o desenvolvimento.
+* coordenador.ino : Código para a placa que receberá os dados.
+* no.ino : Código para as placas que farão a leitura de temperatura. 
+* no_dados_aleatorios.ino : Versão que não faz leitura real do sensor de temperatura, apenas manda um número qualquer. 
+* /Servidor : Arquivos para executar um servidor web local que realiza a leitura da porta serial e mostra o resultado em uma página.
+
+## Como executar o projeto 
+Compile e carregue o código de cada placa.
+
+No diretório **/Servidor** :
+- Execute o comando `npm install` para instalar os módulos
+- Altere a porta serial que será lida no arquivo `index.js`, e execute o comando `node index.js` para iniciar o servidor.
+
+Veja o resultado das leituras na página disponível em `localhost:3000`
 ## Links Úteis : 
- - [Trabalhando com NRF24 + ethernet shield](https://forum.arduino.cc/t/nrf24l01-radios-rf24-library-ethernet-shield-do-not-work-together/195013/24)
  - [Tutoriais NRF24L01](https://forum.arduino.cc/t/simple-nrf24l01-2-4ghz-transceiver-demo/405123/64)
  - [Documentação da biblioteca NRF24](https://nrf24.github.io/RF24/)
- - [Módulo de rádio para quando se usa um servo motor](https://forum.arduino.cc/t/when-i-attach-the-servo-nrf24-confused-it-no-longer-runs-the-motors/1059329/7)
- - [Informações sobre o ENCJ28](https://www.tweaking4all.com/hardware/arduino/arduino-enc28j60-ethernet/)
