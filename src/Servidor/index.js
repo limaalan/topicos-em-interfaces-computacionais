@@ -8,7 +8,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORTA_SERIAL = '/dev/ttyUSB0'; // Porta serial do Arduino
+//const PORTA_SERIAL = '/dev/ttyUSB0'; // Porta serial do Arduino, Linux
+const PORTA_SERIAL = 'COM1'; // Porta serial do Arduino, Windows 
+
+console.log(PORTA_SERIAL)
 const BAUDRATE = 115200; // Taxa de transmissão
 
 // Inicializa a conexão com o Arduino
