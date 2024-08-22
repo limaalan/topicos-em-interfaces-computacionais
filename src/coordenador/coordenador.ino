@@ -12,6 +12,7 @@
 #define CTS 3
 #define TIMEOUT 1000 // Tempo de espera pelo pacote
 #define CS_TIME 70 // Tempo do carrier sense, em microssegundos 
+#define ID_REDE 77
 
 RF24 radio(CE_PIN, CSN_PIN);
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
@@ -21,7 +22,7 @@ uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
 uint8_t meu_end=99;
 
 struct Payload {
-  uint8_t id_rede = 99 ; 
+  uint8_t id_rede = ID_REDE ; 
   uint8_t destino ;
   uint8_t origem = meu_end;
   uint8_t tipo;
@@ -47,7 +48,7 @@ void setup() {
   }
 
   radio.setPALevel(RF24_PA_MAX);  // RF24_PA_MAX is default.
-  radio.setChannel(110);
+  radio.setChannel(15);
   radio.setPayloadSize(sizeof(payload));//sizeof(payload_recebimento));  // float datatype occupies 4 bytes
   radio.setAutoAck(false);
   //radio.disableDynamicPayloads();
@@ -130,16 +131,19 @@ void loop() {
     if (radio.available()) {// Recebeu algo
       uint8_t bytes = radio.getPayloadSize();// Obtém o tamanho do payload
       radio.read(&payloadRx, bytes );
-      printPacote(&payloadRx);
+      //printPacote(&payloadRx);
+      //Serial.println(payloadRx.humidade);
 
-      if(payloadRx.destino == meu_end && payloadRx.tipo==RTS){ // Pacote para mim do tipo RTS
-        Serial.println("pacote pra mim : ");
+      if(payloadRx.destino == meu_end && payloadRx.tipo==RTS && payloadRx.id_rede == ID_REDE){ // Pacote para mim do tipo RTS
+        //Serial.println("pacote pra mim : ");
         sendPacket(&payload, bytes, payloadRx.origem, CTS); // Responde um CTS com destino à origem do pacote recebido.
         bool report = aguardaMsg(MSG); // Aguarda dados
         if (report){
+          Serial.println(String(payloadRx.origem) + " " + String(payloadRx.temperatura) + " " + String(payloadRx.humidade));
+
           sendPacket(&payload, bytes, payloadRx.origem, ACK); // Responde ACK para os dados
-          Serial.println(F("ACK enviado: "));
-          //printPacote(payload);
+          //Serial.println(F("ACK enviado: "));
+          //printPacote(&payload);
         }
       }
     } 

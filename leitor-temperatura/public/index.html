@@ -9,18 +9,31 @@
 </head>
 <body>
   <h1>Leitura atual</h1>
-    <h2 id="id"> Id Placa:</h2>
-    <h2 id="temp">Temperatura:</h2>
-    <h2 id="hum"> Humidade:</h2>
+    <div id="result"> </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+    let placas = [];
+
     socket.on('atualizar-dados', ({ id, temp, humidade }) => {
-   
-      document.getElementById('id').innerText = `Id Placa: ${id}`;
-      document.getElementById('temp').innerText = `Temperatura: ${temp}`;
-      document.getElementById('hum').innerText = `Humidade: ${humidade}`;
+      
+      
+      if (!placas.includes(id)){
+        var newItem = document.createElement('h2');
+        newItem.id = `placa${id}`
+        document.getElementById("result").appendChild(newItem)
+        placas.push(id);
+      }
+      if (placas.length>0){
+        placas.map((placa)=>{
+          document.getElementById(`placa${id}`).innerText = `Placa: ${id} temperatura : ${temp} humidade : ${humidade}`;
+          console.log(`placa${placa}`)
+        })
+      }
     });
+
+
   </script>
 </body>
 </html>

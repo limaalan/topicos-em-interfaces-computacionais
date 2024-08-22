@@ -5,8 +5,8 @@
 #include "RF24.h"
 #include "DHT11.h"
 //Pinos usados
-#define CE_PIN 8
-#define CSN_PIN 10
+#define CE_PIN 7
+#define CSN_PIN 8
 #define DHT11_PIN 2
 //Definição dos tipos de mensagem
 #define MSG 0
@@ -23,8 +23,12 @@ DHT11 dht11(DHT11_PIN);
 RF24 radio(CE_PIN, CSN_PIN);
 //Pipe de leitura e escrita ( deve ser o mesmo, não usar funções da biblioteca)
 uint64_t address[2] = { 0x3030303030LL, 0x3030303030LL};
-uint8_t meu_end=98;
+uint8_t meu_end=97;
 uint8_t end_coordenador = 99 ; // Endereço do coordenador ( destino dos pacotes)
+
+//mock dados
+int temp_mock = 20;
+int hum_mock = 40;
 
 //Definindo variáveis e structs que serão utilizadas na transmissão
 //byte payload[6] = {99,1,meu_end,3,4,5};
@@ -139,18 +143,19 @@ void sendPacket(Payload *payload, uint8_t tamanho, uint8_t destino, uint8_t cont
 
 void loop() {
   
-  int temperatura = 0 ;
-  int humidade = 0 ;
-  int result = dht11.readTemperatureHumidity ( temperatura, humidade ) ;
-  if (result != 0 ){
+  //int temperatura = 50 ;
+  //int humidade = 50 ;
+  //int result = dht11.readTemperatureHumidity ( temperatura, humidade ) ;
+  //if (result != 0 ){
     // Não leu corretamente
-    Serial.println(DHT11::getErrorString(result));
-    temperatura = -253 ; 
-    humidade = - 1;
-  }
+   // Serial.println(DHT11::getErrorString(result));
+    //temperatura = -253 ; 
+    //humidade = - 1;
+  //}
 
-  payload.temperatura = (uint8_t)temperatura;
-  payload.humidade = (uint8_t)humidade;
+
+  payload.temperatura = (uint8_t)temp_mock;
+  payload.humidade = (uint8_t)hum_mock;
 
   byte bytes = radio.getPayloadSize();
   printPacote(&payload);
@@ -172,5 +177,12 @@ void loop() {
   radio.flush_rx();
   delay(2000);
 
-
+  //mock para a placa do professor
+  if(temp_mock > 40){
+    temp_mock = 20 ;
+    hum_mock = 45 ;
+  }
+  temp_mock ++ ;
+  hum_mock +=2 ;
+  
 }
